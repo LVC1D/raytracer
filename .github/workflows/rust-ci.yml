@@ -20,15 +20,14 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo clippy -- -D warnings
   tarpaulin:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Run cargo-tarpaulin
-        uses: actions-rs/tarpaulin@v0.1
-        with:
-          version: '0.22.0'
-          args: '--all-features --workspace --ignore-tests --out Lcov'
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v5
+    - uses: dtolnay/rust-toolchain@stable
+    - name: Install tarpaulin
+      run: cargo install cargo-tarpaulin
+    - name: Run tarpaulin
+      run: cargo tarpaulin --lib --out Xml --output-dir .
   fmt:
     runs-on: ubuntu-latest
     steps:
