@@ -55,23 +55,38 @@ pub fn normalized_direction(width: usize, height: usize, x: f64, y: f64) -> Vec3
 pub fn hit_or_miss(spheres: &[Sphere], ray: &Ray) -> Vec3 {
     for sphere in spheres.iter() {
         if ray_sphere_intersect(&ray, sphere) {
-            return Vec3 { x: 1.0, y: 0.0, z: 0.0 };
-        } 
+            return Vec3 {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0,
+            };
+        }
     }
 
-    Vec3 { x: 0.5, y: 0.7, z: 1.0 }
+    Vec3 {
+        x: 0.5,
+        y: 0.7,
+        z: 1.0,
+    }
 }
 
 pub fn render_naive(width: usize, height: usize, spheres: &[Sphere]) -> Image {
     let mut image = Image::new(width, height);
-    let camera = Vec3 {x: 0.0, y: 0.0, z: 0.0};
+    let camera = Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
 
     for h in 0..height {
         let hf64 = h as f64;
         for w in 0..width {
             let wf64 = w as f64;
             let direction = normalized_direction(width, height, wf64, hf64);
-            let ray = Ray {origin: camera, direction};
+            let ray = Ray {
+                origin: camera,
+                direction,
+            };
 
             let pixel = hit_or_miss(spheres, &ray);
             let pixel_idx = h * width + w;
@@ -97,9 +112,9 @@ impl AABB {
         let (tx_smaller, tx_larger) = if ray.direction.x.abs() < 0.0001 {
             // Ray is parallel to X axis
             if ray.origin.x >= self.min.x && ray.origin.x <= self.max.x {
-                (f64::NEG_INFINITY, f64::INFINITY)  // Inside for all t
+                (f64::NEG_INFINITY, f64::INFINITY) // Inside for all t
             } else {
-                (f64::INFINITY, f64::NEG_INFINITY)  // Never inside (impossible range)
+                (f64::INFINITY, f64::NEG_INFINITY) // Never inside (impossible range)
             }
         } else {
             // Normal case: calculate intersection times
@@ -111,9 +126,9 @@ impl AABB {
         let (ty_smaller, ty_larger) = if ray.direction.y.abs() < 0.0001 {
             // Ray is parallel to X axis
             if ray.origin.y >= self.min.y && ray.origin.y <= self.max.y {
-                (f64::NEG_INFINITY, f64::INFINITY)  // Inside for all t
+                (f64::NEG_INFINITY, f64::INFINITY) // Inside for all t
             } else {
-                (f64::INFINITY, f64::NEG_INFINITY)  // Never inside (impossible range)
+                (f64::INFINITY, f64::NEG_INFINITY) // Never inside (impossible range)
             }
         } else {
             // Normal case: calculate intersection times
@@ -125,9 +140,9 @@ impl AABB {
         let (tz_smaller, tz_larger) = if ray.direction.z.abs() < 0.0001 {
             // Ray is parallel to X axis
             if ray.origin.z >= self.min.z && ray.origin.z <= self.max.z {
-                (f64::NEG_INFINITY, f64::INFINITY)  // Inside for all t
+                (f64::NEG_INFINITY, f64::INFINITY) // Inside for all t
             } else {
-                (f64::INFINITY, f64::NEG_INFINITY)  // Never inside (impossible range)
+                (f64::INFINITY, f64::NEG_INFINITY) // Never inside (impossible range)
             }
         } else {
             // Normal case: calculate intersection times
@@ -135,7 +150,6 @@ impl AABB {
             let t2 = (self.max.z - ray.origin.z) / ray.direction.z;
             (t1.min(t2), t1.max(t2))
         };
-
 
         let t_entry = [tx_smaller, ty_smaller, tz_smaller]
             .into_iter()
@@ -160,7 +174,7 @@ pub enum BVHNode {
     Leaf {
         aabb: AABB,
         spheres: Vec<Sphere>,
-    }
+    },
 }
 
 pub fn compute_aabb(spheres: &[Sphere]) -> AABB {
@@ -216,7 +230,7 @@ pub fn compute_aabb(spheres: &[Sphere]) -> AABB {
             x: x_max,
             y: y_max,
             z: z_max,
-        }
+        },
     }
 }
 
@@ -250,23 +264,23 @@ impl BVHNode {
         let extent_z = aabb.max.z - aabb.min.z;
 
         let split_axis = if extent_x >= extent_y && extent_x >= extent_z {
-            0  // X-axis
+            0 // X-axis
         } else if extent_y >= extent_z {
-            1  // Y-axis
+            1 // Y-axis
         } else {
-            2  // Z-axis
+            2 // Z-axis
         };
 
         match split_axis {
             0 => {
                 spheres.sort_by(|a, b| cmp_f64(&a.center.x, &b.center.x));
-            },
+            }
             1 => {
                 spheres.sort_by(|a, b| cmp_f64(&a.center.y, &b.center.y));
-            },
+            }
             _ => {
                 spheres.sort_by(|a, b| cmp_f64(&a.center.z, &b.center.z));
-            }, 
+            }
         }
 
         let mid_idx = spheres.len() / 2;
@@ -281,7 +295,7 @@ impl BVHNode {
 
     pub fn intersect_bvh(&self, ray: &Ray) -> bool {
         match self {
-            BVHNode::Internal {aabb, left, right} => {
+            BVHNode::Internal { aabb, left, right } => {
                 if !aabb.intersect(ray) {
                     return false;
                 }
@@ -290,33 +304,50 @@ impl BVHNode {
                 let right_hit = right.intersect_bvh(ray);
 
                 left_hit || right_hit
-            },
+            }
             BVHNode::Leaf { aabb, spheres } => {
                 if !aabb.intersect(ray) {
                     return false;
                 }
 
-                spheres.iter().any(|sphere| ray_sphere_intersect(ray, &sphere))
-            }, 
+                spheres
+                    .iter()
+                    .any(|sphere| ray_sphere_intersect(ray, &sphere))
+            }
         }
     }
 }
 
 pub fn render_bvh(width: usize, height: usize, bvh: &BVHNode) -> Image {
     let mut image = Image::new(width, height);
-    let camera = Vec3 {x: 0.0, y: 0.0, z: 0.0};
+    let camera = Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
 
     for h in 0..height {
         let hf64 = h as f64;
         for w in 0..width {
             let wf64 = w as f64;
             let direction = normalized_direction(width, height, wf64, hf64);
-            let ray = Ray {origin: camera, direction};
+            let ray = Ray {
+                origin: camera,
+                direction,
+            };
 
             let pixel = if bvh.intersect_bvh(&ray) {
-                Vec3 { x: 1.0, y: 0.0, z: 0.0 }
+                Vec3 {
+                    x: 1.0,
+                    y: 0.0,
+                    z: 0.0,
+                }
             } else {
-                Vec3 { x: 0.5, y: 0.7, z: 1.0 }
+                Vec3 {
+                    x: 0.5,
+                    y: 0.7,
+                    z: 1.0,
+                }
             };
 
             let pixel_idx = h * width + w;
@@ -326,7 +357,6 @@ pub fn render_bvh(width: usize, height: usize, bvh: &BVHNode) -> Image {
 
     image
 }
-
 
 // The Image rendering
 
@@ -342,7 +372,14 @@ impl Image {
         Image {
             width,
             height,
-            pixels: vec![Vec3 { x: 0.0, y: 0.0, z: 0.0 }; width * height],
+            pixels: vec![
+                Vec3 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0
+                };
+                width * height
+            ],
         }
     }
 
@@ -369,104 +406,257 @@ impl Image {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::time::Instant;
     use proptest::prelude::*;
+    use std::time::Instant;
 
     #[test]
     fn test_ray_hits_sphere() {
         let ray = Ray {
-            origin: Vec3 { x: 0.0, y: 0.0, z: 0.0 },
-            direction: Vec3 { x: 0.0, y: 0.0, z: 1.0 }, // pointing forward
+            origin: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            direction: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 1.0,
+            }, // pointing forward
         };
         let sphere = Sphere {
-            center: Vec3 { x: 0.0, y: 0.0, z: 5.0 }, // 5 units ahead
+            center: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 5.0,
+            }, // 5 units ahead
             radius: 1.0,
         };
-        
+
         assert!(ray_sphere_intersect(&ray, &sphere)); // Should hit!
     }
 
     #[test]
     fn test_ray_misses_sphere() {
         let ray = Ray {
-            origin: Vec3 { x: 0.0, y: 0.0, z: 0.0 },
-            direction: Vec3 { x: 1.0, y: 0.0, z: 0.0 }, // pointing right
+            origin: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            direction: Vec3 {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0,
+            }, // pointing right
         };
         let sphere = Sphere {
-            center: Vec3 { x: 0.0, y: 0.0, z: 5.0 }, // ahead, not right
+            center: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 5.0,
+            }, // ahead, not right
             radius: 1.0,
         };
-        
+
         assert!(!ray_sphere_intersect(&ray, &sphere)); // Should miss!
     }
 
     #[test]
     fn test_ray_hits_aabb() {
         let aabb = AABB {
-            min: Vec3 { x: 0.0, y: 1.0, z: 4.0 },
-            max: Vec3 { x: 3.0, y: 3.0, z: 6.0 },
+            min: Vec3 {
+                x: 0.0,
+                y: 1.0,
+                z: 4.0,
+            },
+            max: Vec3 {
+                x: 3.0,
+                y: 3.0,
+                z: 6.0,
+            },
         };
-    
+
         let ray = Ray {
-            origin: Vec3 { x: 0.0, y: 2.0, z: 0.0 },
-            direction: Vec3 { x: 0.0, y: 0.0, z: 1.0 }, // Shooting forward through box
+            origin: Vec3 {
+                x: 0.0,
+                y: 2.0,
+                z: 0.0,
+            },
+            direction: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 1.0,
+            }, // Shooting forward through box
         };
-    
+
         assert!(aabb.intersect(&ray));
     }
 
     #[test]
     fn test_ray_misses_aabb() {
         let aabb = AABB {
-            min: Vec3 { x: 1.0, y: 1.0, z: 4.0 },
-            max: Vec3 { x: 3.0, y: 3.0, z: 6.0 },
+            min: Vec3 {
+                x: 1.0,
+                y: 1.0,
+                z: 4.0,
+            },
+            max: Vec3 {
+                x: 3.0,
+                y: 3.0,
+                z: 6.0,
+            },
         };
-    
+
         let ray = Ray {
-            origin: Vec3 { x: 5.0, y: 2.0, z: 0.0 }, // Starting to the right of box
-            direction: Vec3 { x: 0.0, y: 0.0, z: 1.0 }, // Shooting forward, will miss
+            origin: Vec3 {
+                x: 5.0,
+                y: 2.0,
+                z: 0.0,
+            }, // Starting to the right of box
+            direction: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 1.0,
+            }, // Shooting forward, will miss
         };
-    
+
         assert!(!aabb.intersect(&ray));
     }
 
     #[test]
     fn test_compute_aabb() {
         let spheres = vec![
-            Sphere { center: Vec3 { x: 0.0, y: 0.0, z: 0.0 }, radius: 1.0 },
-            Sphere { center: Vec3 { x: 5.0, y: 5.0, z: 5.0 }, radius: 1.0 },
+            Sphere {
+                center: Vec3 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                },
+                radius: 1.0,
+            },
+            Sphere {
+                center: Vec3 {
+                    x: 5.0,
+                    y: 5.0,
+                    z: 5.0,
+                },
+                radius: 1.0,
+            },
         ];
-    
+
         let aabb = compute_aabb(&spheres);
-    
+
         // What should min and max be?
         // Add assertions here
-        assert_eq!(aabb.min, Vec3 {x: -1.0, y: -1.0, z: -1.0});
-        assert_eq!(aabb.max, Vec3 {x: 6.0, y: 6.0, z: 6.0});
+        assert_eq!(
+            aabb.min,
+            Vec3 {
+                x: -1.0,
+                y: -1.0,
+                z: -1.0
+            }
+        );
+        assert_eq!(
+            aabb.max,
+            Vec3 {
+                x: 6.0,
+                y: 6.0,
+                z: 6.0
+            }
+        );
     }
 
     #[test]
     fn test_bvh_node_less_than_4_spheres() {
         let mut spheres = vec![
-            Sphere { center: Vec3 { x: 0.0, y: 0.0, z: 0.0 }, radius: 1.0 },
-            Sphere { center: Vec3 { x: 5.0, y: 5.0, z: 5.0 }, radius: 1.0 },
-            Sphere { center: Vec3 { x: 2.0, y: -3.0, z: 1.0 }, radius: 1.0 },
+            Sphere {
+                center: Vec3 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                },
+                radius: 1.0,
+            },
+            Sphere {
+                center: Vec3 {
+                    x: 5.0,
+                    y: 5.0,
+                    z: 5.0,
+                },
+                radius: 1.0,
+            },
+            Sphere {
+                center: Vec3 {
+                    x: 2.0,
+                    y: -3.0,
+                    z: 1.0,
+                },
+                radius: 1.0,
+            },
         ];
 
         let bvhnode = BVHNode::build(spheres.clone());
 
-        assert_eq!(bvhnode, BVHNode::Leaf { aabb: compute_aabb(&spheres), spheres });
+        assert_eq!(
+            bvhnode,
+            BVHNode::Leaf {
+                aabb: compute_aabb(&spheres),
+                spheres
+            }
+        );
     }
 
     #[test]
     fn test_bvh_node_more_than_4_spheres() {
         let mut spheres = vec![
-            Sphere { center: Vec3 { x: 0.0, y: 0.0, z: 0.0 }, radius: 1.0 },
-            Sphere { center: Vec3 { x: 5.0, y: 5.0, z: 5.0 }, radius: 1.0 },
-            Sphere { center: Vec3 { x: 2.0, y: -3.0, z: 1.0 }, radius: 1.0 },
-            Sphere { center: Vec3 { x: 0.0, y: 0.0, z: 0.0 }, radius: 1.0 },
-            Sphere { center: Vec3 { x: 5.0, y: 5.0, z: 5.0 }, radius: 1.0 },
-            Sphere { center: Vec3 { x: 2.0, y: -3.0, z: 1.0 }, radius: 1.0 },
+            Sphere {
+                center: Vec3 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                },
+                radius: 1.0,
+            },
+            Sphere {
+                center: Vec3 {
+                    x: 5.0,
+                    y: 5.0,
+                    z: 5.0,
+                },
+                radius: 1.0,
+            },
+            Sphere {
+                center: Vec3 {
+                    x: 2.0,
+                    y: -3.0,
+                    z: 1.0,
+                },
+                radius: 1.0,
+            },
+            Sphere {
+                center: Vec3 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                },
+                radius: 1.0,
+            },
+            Sphere {
+                center: Vec3 {
+                    x: 5.0,
+                    y: 5.0,
+                    z: 5.0,
+                },
+                radius: 1.0,
+            },
+            Sphere {
+                center: Vec3 {
+                    x: 2.0,
+                    y: -3.0,
+                    z: 1.0,
+                },
+                radius: 1.0,
+            },
         ];
 
         let bvhnode = BVHNode::build(spheres.clone());
@@ -478,33 +668,33 @@ mod tests {
         let extent_z = aabb.max.z - aabb.min.z;
 
         let split_axis = if extent_x >= extent_y && extent_x >= extent_z {
-            0  // X-axis
+            0 // X-axis
         } else if extent_y >= extent_z {
-            1  // Y-axis
+            1 // Y-axis
         } else {
-            2  // Z-axis
+            2 // Z-axis
         };
 
         match split_axis {
             0 => {
                 spheres.sort_by(|a, b| cmp_f64(&a.center.x, &b.center.x));
-            },
+            }
             1 => {
                 spheres.sort_by(|a, b| cmp_f64(&a.center.y, &b.center.y));
-            },
+            }
             _ => {
                 spheres.sort_by(|a, b| cmp_f64(&a.center.z, &b.center.z));
-            }, 
+            }
         }
 
         let mid_idx = spheres.len() / 2;
         let right_half = spheres.split_off(mid_idx);
 
         assert_eq!(
-            bvhnode, 
-            BVHNode::Internal { 
-                aabb, 
-                left: Box::new(BVHNode::build(spheres)), 
+            bvhnode,
+            BVHNode::Internal {
+                aabb,
+                left: Box::new(BVHNode::build(spheres)),
                 right: Box::new(BVHNode::build(right_half)),
             }
         );
@@ -513,24 +703,44 @@ mod tests {
     #[test]
     fn test_bvh_intersect() {
         let spheres = vec![
-            Sphere { center: Vec3 { x: 0.0, y: 0.0, z: 5.0 }, radius: 1.0 },
+            Sphere {
+                center: Vec3 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 5.0,
+                },
+                radius: 1.0,
+            },
             // ... a few more spheres
         ];
-    
+
         let bvh = BVHNode::build(spheres);
         let ray = Ray {
-            origin: Vec3 { x: 0.0, y: 0.0, z: 0.0 },
-            direction: Vec3 { x: 0.0, y: 0.0, z: 1.0 },
+            origin: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            direction: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 1.0,
+            },
         };
-    
-        assert!(bvh.intersect_bvh(&ray));  // Should hit the sphere at z=5
+
+        assert!(bvh.intersect_bvh(&ray)); // Should hit the sphere at z=5
     }
 
     #[test]
     fn test_render_naive_produces_correct_size() {
-        let spheres = vec![
-            Sphere { center: Vec3 { x: 0.0, y: 0.0, z: 5.0 }, radius: 1.0 },
-        ];
+        let spheres = vec![Sphere {
+            center: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 5.0,
+            },
+            radius: 1.0,
+        }];
         let image = render_naive(10, 10, &spheres);
         assert_eq!(image.pixels.len(), 100);
     }
@@ -540,23 +750,23 @@ mod tests {
         let mut rng_x = 0.0;
         let mut rng_y = 0.0;
         let mut rng_z = 5.0;
-    
+
         for i in 0..count {
             spheres.push(Sphere {
                 center: Vec3 {
-                    x: (rng_x * 31.0) % 20.0 - 10.0,  // Spread across X: -10 to 10
-                    y: (rng_y * 17.0) % 20.0 - 10.0,  // Spread across Y: -10 to 10
-                    z: rng_z + (i as f64 * 0.1),      // Depth: 5 to 5 + count*0.1
+                    x: (rng_x * 31.0) % 20.0 - 10.0, // Spread across X: -10 to 10
+                    y: (rng_y * 17.0) % 20.0 - 10.0, // Spread across Y: -10 to 10
+                    z: rng_z + (i as f64 * 0.1),     // Depth: 5 to 5 + count*0.1
                 },
                 radius: 0.5,
             });
-        
+
             // Simple pseudo-random updates
             rng_x += 1.7;
             rng_y += 2.3;
             rng_z += 0.05;
         }
-    
+
         spheres
     }
 
@@ -577,10 +787,10 @@ mod tests {
         fn property_aabb_contains_all_spheres(
             sphere_cap in 0usize..500
             ) {
-            // Generate 100 random spheres 
+            // Generate 100 random spheres
                 let spheres = create_many_spheres(sphere_cap);
                 let aabb = compute_aabb(&spheres);
-        
+
                 // Property: EVERY sphere must fit inside the AABB
                 for sphere in &spheres {
                     prop_assert!(sphere.center.x - sphere.radius >= aabb.min.x);
@@ -592,7 +802,7 @@ mod tests {
                     prop_assert!(sphere.center.z - sphere.radius >= aabb.min.z);
                     prop_assert!(sphere.center.z + sphere.radius <= aabb.max.z);
                 }
-            
+
         }
     }
 }
