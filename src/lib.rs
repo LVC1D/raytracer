@@ -1,5 +1,6 @@
 use std::cmp::{self, Ordering};
 
+// A coordinate struct
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Vec3 {
     pub x: f64,
@@ -20,6 +21,7 @@ pub struct Sphere {
 }
 
 // Naive Approach
+// Check if the ray hits a given sphere - using the quadratic formula
 pub fn ray_sphere_intersect(ray: &Ray, sphere: &Sphere) -> bool {
     let oc_x = ray.origin.x - sphere.center.x;
     let oc_y = ray.origin.y - sphere.center.y;
