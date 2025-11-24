@@ -27,7 +27,7 @@ jobs:
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
         with:
-          version: '0.34.1'
+          version: '0.25.0'
           args: '--lib --out Stdout --fail-immediately'
   fmt:
     runs-on: ubuntu-latest
