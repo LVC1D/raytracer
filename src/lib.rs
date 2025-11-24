@@ -1,4 +1,4 @@
-use std::cmp::{self, Ordering};
+use std::cmp::Ordering;
 
 // A coordinate struct
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -28,17 +28,17 @@ pub fn ray_sphere_intersect(ray: &Ray, sphere: &Sphere) -> bool {
     let oc_z = ray.origin.z - sphere.center.z;
 
     let a = ray.direction.x.powi(2) + ray.direction.y.powi(2) + ray.direction.z.powi(2);
-    let b = 2 as f64 * (oc_x * ray.direction.x + oc_y * ray.direction.y + oc_z * ray.direction.z);
+    let b = 2_f64 * (oc_x * ray.direction.x + oc_y * ray.direction.y + oc_z * ray.direction.z);
     let c = oc_x.powi(2) + oc_y.powi(2) + oc_z.powi(2) - sphere.radius.powi(2);
 
-    let disc_value = b.powf(2.0) - 4.0 as f64 * a * c;
+    let disc_value = b.powf(2.0) - 4.0_f64 * a * c;
     if disc_value < 0.0 {
         return false;
     }
 
     let discriminant = f64::sqrt(disc_value);
-    let t_1 = (-b - discriminant) / (2 as f64 * a);
-    let t_2 = (-b + discriminant) / (2 as f64 * a);
+    let t_1 = (-b - discriminant) / (2_f64 * a);
+    let t_2 = (-b + discriminant) / (2_f64 * a);
 
     t_1 > 0.0 || t_2 > 0.0
 }
@@ -56,7 +56,7 @@ pub fn normalized_direction(width: usize, height: usize, x: f64, y: f64) -> Vec3
 
 pub fn hit_or_miss(spheres: &[Sphere], ray: &Ray) -> Vec3 {
     for sphere in spheres.iter() {
-        if ray_sphere_intersect(&ray, sphere) {
+        if ray_sphere_intersect(ray, sphere) {
             return Vec3 {
                 x: 1.0,
                 y: 0.0,
@@ -249,7 +249,7 @@ fn cmp_f64(a: &f64, b: &f64) -> Ordering {
     } else if a > b {
         return Ordering::Greater;
     }
-    return Ordering::Equal;
+    Ordering::Equal
 }
 
 impl BVHNode {
@@ -314,7 +314,7 @@ impl BVHNode {
 
                 spheres
                     .iter()
-                    .any(|sphere| ray_sphere_intersect(ray, &sphere))
+                    .any(|sphere| ray_sphere_intersect(ray, sphere))
             }
         }
     }
