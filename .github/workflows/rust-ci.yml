@@ -28,7 +28,7 @@ jobs:
         uses: actions-rs/tarpaulin@v0.1
         with:
           version: '0.22.0'
-          args: '--lib --out Stdout --fail-immediately'
+          args: '--all-features --workspace --ignore-tests --out Lcov'
   fmt:
     runs-on: ubuntu-latest
     steps:
