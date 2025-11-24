@@ -26,9 +26,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
-          with:
-            version: '0.15.0'
-            args: '--lib --out Html --output-dir . --fail-immediately'
+        with:
+          version: '0.15.0'
+          args: '--lib --out Html --output-dir . --fail-immediately'
   fmt:
     runs-on: ubuntu-latest
     steps:
